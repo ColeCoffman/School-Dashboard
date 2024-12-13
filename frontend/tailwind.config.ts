@@ -11,6 +11,12 @@ export default {
       colors: {
         background: "var(--background)",
         foreground: "var(--foreground)",
+        schoolSky: "#C8ebfa",
+        schoolSkyLight: "#edf9fd",
+        schoolPurple: "#cfceff",
+        schoolPurpleLight: "#f2f0ff",
+        schoolYellow: "#fae27c",
+        schoolYellowLight: "#fefce8",
       },
     },
   },
