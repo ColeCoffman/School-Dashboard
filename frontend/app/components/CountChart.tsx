@@ -31,7 +31,7 @@ export default function CountChart() {
     <div className="rounded-xl bg-white w-full h-full p-4">
       {/* Title */}
       <div className="flex justify-between items-center">
-        <h1 className="text-lg font-semibold">Students</h1>
+        <h1 className="text-lg font-medium">Students</h1>
         <Image src="/moreDark.png" alt="More" width={20} height={20} />
       </div>
       {/* Chart */}
