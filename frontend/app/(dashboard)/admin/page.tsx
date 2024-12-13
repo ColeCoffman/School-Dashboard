@@ -1,3 +1,4 @@
+import AttendanceChart from "@/app/components/AttendanceChart";
 import CountChart from "@/app/components/CountChart";
 import UserCard from "@/app/components/UserCard";
 
@@ -21,11 +22,11 @@ export default function AdminPage() {
           </div>
           {/* Attendance Chart */}
           <div className="w-full lg:w-2/3 h-[450px]">
-            <CountChart />
+            <AttendanceChart />
           </div>
         </div>
         {/* Bottom Chart */}
-        <div className="flex gap-4 justify-between flex-wrap">
+        <div className="w-full h-[500px]">
           <CountChart />
         </div>
       </div>
