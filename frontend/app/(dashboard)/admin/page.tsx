@@ -1,5 +1,6 @@
 import AttendanceChart from "@/app/components/AttendanceChart";
 import CountChart from "@/app/components/CountChart";
+import EventCalender from "@/app/components/EventCalender";
 import FinanceChart from "@/app/components/FinanceChart";
 import UserCard from "@/app/components/UserCard";
 
@@ -32,7 +33,9 @@ export default function AdminPage() {
         </div>
       </div>
       {/* Right */}
-      <div className="w-full lg:w-1/3">R</div>
+      <div className="w-full lg:w-1/3 flex flex-col gap-8">
+        <EventCalender />
+      </div>
     </div>
   );
 }
