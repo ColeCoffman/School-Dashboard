@@ -1,9 +1,9 @@
+import FormModal from "@/app/components/FormModal";
 import Pagination from "@/app/components/Pagination";
 import Table from "@/app/components/Table";
 import TableSearch from "@/app/components/TableSearch";
 import { role, resultsData } from "@/app/lib/data";
 import Image from "next/image";
-import Link from "next/link";
 
 type Result = {
   id: number;
@@ -64,16 +64,13 @@ function ResultRow(item: Result) {
       <td className="hidden md:table-cell">{item.date}</td>
       <td>
         <div className="flex items-center gap-2">
-          <Link href={`/list/results/${item.id}`}>
-            <button className="w-7 h-7 rounded-full bg-schoolSky flex items-center justify-center">
-              <Image src="/edit.png" alt="Edit" width={16} height={16} />
-            </button>
-          </Link>
-          {role === "admin" && (
-            <button className="w-7 h-7 rounded-full bg-schoolPurple flex items-center justify-center">
-              <Image src="/delete.png" alt="Delete" width={16} height={16} />
-            </button>
-          )}
+          {role === "admin" ||
+            (role === "teacher" && (
+              <>
+                <FormModal table="result" type="update" data={item} />
+                <FormModal table="result" type="delete" id={item.id} />
+              </>
+            ))}
         </div>
       </td>
     </tr>
@@ -95,11 +92,7 @@ export default function ResultsListPage() {
             <button className="w-8 h-8 rounded-full bg-schoolYellow flex items-center justify-center">
               <Image src="/sort.png" alt="Sort" width={14} height={14} />
             </button>
-            {role === "admin" && (
-              <button className="w-8 h-8 rounded-full bg-schoolYellow flex items-center justify-center">
-                <Image src="/plus.png" alt="Add" width={14} height={14} />
-              </button>
-            )}
+            {role === "admin" && <FormModal table="result" type="create" />}
           </div>
         </div>
       </div>
