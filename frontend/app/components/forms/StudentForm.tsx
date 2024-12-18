@@ -24,7 +24,7 @@ const schema = z.object({
   img: z.instanceof(File, { message: "Image is required" }),
 });
 
-export default function TeacherForm({
+export default function StudentForm({
   type,
   data,
 }: {
@@ -47,7 +47,7 @@ export default function TeacherForm({
 
   return (
     <form action="" className="flex flex-col gap-8" onSubmit={onSubmit}>
-      <h1 className="text-xl font-semibold">Add Teacher</h1>
+      <h1 className="text-xl font-semibold">Add Student</h1>
       <span className="text-xs text-gray-500 font-medium">Authentication</span>
       <div className="flex justify-between flex-wrap gap-4">
         {/* Input fields for authentication details */}
