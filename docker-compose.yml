@@ -3,46 +3,30 @@ services:
     build:
       context: ./frontend/
       dockerfile: Dockerfile
-    ports:
-      - 3000:3000
     volumes:
       - ./frontend:/app
     environment:
       - WATCHPACK_POLLING=true
-    # depends_on:
-    #   - backend
+    depends_on:
+      - db
 
-  # backend:
-  #   build:
-  #     context: ./backend
-  #     dockerfile: Dockerfile
-  #   ports:
-  #     - 3001:3001
-  #   volumes:
-  #     - ./backend:/app
-  #   environment:
-  #     - NODE_ENV=development
-  #     - DB_HOST=db
-  #     - DB_USER=postgres
-  #     - DB_PASSWORD=PASS123
-  #     - DB_NAME=school_app
-  #   command: npm run start:dev
-
-  # db:
-  #   image: postgres
-  #   restart: always
-  #   shm_size: 128mb
-  #   ports:
-  #     - 5432:5432
-  #   environment:
-  #     - POSTGRES_PASSWORD=PASS123
-  #     - POSTGRES_DB=school_app
   
-  # adminer:
-  #   image: adminer
-  #   restart: always
-  #   ports:
-  #     - 8080:8080
+
+  db:
+    image: postgres
+    restart: always
+    shm_size: 128mb
+    environment:
+      - POSTGRES_PASSWORD=PASS123
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=school_app
+  
+  adminer:
+    image: adminer
+    restart: always
+    depends_on:
+      - db
+
   
   nginx:
     image: nginx:alpine
@@ -52,4 +36,5 @@ services:
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
     depends_on:
       - frontend
-      # - backend
+      - db
+      - adminer

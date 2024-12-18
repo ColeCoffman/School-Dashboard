@@ -4,8 +4,10 @@ WORKDIR /app
 
 COPY package*.json ./
 
-RUN npm install
+RUN npm install --legacy-peer-deps
 
-COPY . .
+# Copy the start script into the container
+COPY start.sh /app/start.sh
 
-CMD ["npm", "run", "dev"]
+# Use the start script as the command
+CMD ["sh", "/app/start.sh"]
