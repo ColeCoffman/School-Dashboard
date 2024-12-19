@@ -3,14 +3,22 @@ import Pagination from "@/app/components/Pagination";
 import Table from "@/app/components/Table";
 import TableSearch from "@/app/components/TableSearch";
 import { classesData, role } from "@/app/lib/data";
+import prisma from "@/app/lib/prisma";
+import { ITEMS_PER_PAGE } from "@/app/lib/settings";
+import { Class, Grade, Prisma, Teacher } from "@prisma/client";
 import Image from "next/image";
 
-type Class = {
+type ClassList = {
   id: number;
   name: string;
   capacity: number;
-  grade: number;
-  supervisor: string;
+  supervisor: {
+    name: string;
+    surname: string;
+  } | null;
+  grade: {
+    level: number;
+  };
 };
 
 const columns = [
@@ -38,7 +46,7 @@ const columns = [
   },
 ];
 
-function ClassRow(item: Class) {
+function ClassRow(item: ClassList) {
   return (
     <tr
       key={item.id}
@@ -46,8 +54,10 @@ function ClassRow(item: Class) {
     >
       <td className="flex items-center gap-4 p-4">{item.name}</td>
       <td>{item.capacity}</td>
-      <td className="hidden md:table-cell">{item.grade}</td>
-      <td className="hidden md:table-cell">{item.supervisor}</td>
+      <td className="hidden md:table-cell">{item.grade.level}</td>
+      <td className="hidden md:table-cell">
+        {item.supervisor?.name + " " + item.supervisor?.surname}
+      </td>
       <td>
         <div className="flex items-center gap-2">
           {role === "admin" && (
@@ -62,7 +72,54 @@ function ClassRow(item: Class) {
   );
 }
 
-export default function ClassesListPage() {
+export default async function ClassesListPage({
+  searchParams,
+}: {
+  searchParams: { [key: string]: string | undefined };
+}) {
+  const { page, ...queryParams } = await searchParams;
+  const pageNumber = page ? parseInt(page as string) : 1;
+
+  const query: Prisma.ClassWhereInput = {};
+
+  // URL PARAMS
+  if (queryParams) {
+    for (const [key, value] of Object.entries(queryParams)) {
+      if (value !== undefined) {
+        switch (key) {
+          case "supervisorId":
+            query.supervisorId = value as string;
+            break;
+          case "search":
+            {
+              query.name = {
+                contains: value as string,
+                mode: "insensitive",
+              };
+            }
+            break;
+          default:
+            break;
+        }
+      }
+    }
+  }
+
+  const [data, count] = await prisma.$transaction([
+    prisma.class.findMany({
+      where: query,
+      include: {
+        supervisor: true,
+        grade: true,
+      },
+      take: ITEMS_PER_PAGE,
+      skip: (pageNumber - 1) * ITEMS_PER_PAGE,
+    }),
+    prisma.class.count({
+      where: query,
+    }),
+  ]);
+
   return (
     <div className="bg-white p-4 rounded-md flex-1 m-4 mt-0">
       {/* TOP */}
@@ -82,9 +139,9 @@ export default function ClassesListPage() {
         </div>
       </div>
       {/* List */}
-      <Table columns={columns} renderRow={ClassRow} data={classesData} />
+      <Table columns={columns} renderRow={ClassRow} data={data} />
       {/* Pagination */}
-      <Pagination />
+      <Pagination page={pageNumber} count={count} />
     </div>
   );
 }

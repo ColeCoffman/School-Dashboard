@@ -3,15 +3,17 @@ import Pagination from "@/app/components/Pagination";
 import Table from "@/app/components/Table";
 import TableSearch from "@/app/components/TableSearch";
 import { role, eventsData } from "@/app/lib/data";
+import prisma from "@/app/lib/prisma";
+import { ITEMS_PER_PAGE } from "@/app/lib/settings";
+import { Prisma } from "@prisma/client";
 import Image from "next/image";
 
-type Event = {
+type EventList = {
   id: number;
   title: string;
-  class: string;
-  date: string;
-  startTime: string;
-  endTime: string;
+  class: { name: string } | null;
+  startTime: Date;
+  endTime: Date;
 };
 
 const columns = [
@@ -44,17 +46,34 @@ const columns = [
   },
 ];
 
-function EventRow(item: Event) {
+function EventRow(item: EventList) {
   return (
     <tr
       key={item.id}
       className="border-b border-gray-200 even:bg-slate-50 text-sm hover:bg-schoolSky"
     >
       <td className="flex items-center gap-4 p-4">{item.title}</td>
-      <td>{item.class}</td>
-      <td className="hidden md:table-cell">{item.date}</td>
-      <td className="hidden md:table-cell">{item.startTime}</td>
-      <td className="hidden md:table-cell">{item.endTime}</td>
+      <td>{item.class?.name}</td>
+      <td className="hidden md:table-cell">
+        {new Intl.DateTimeFormat("en-US", {
+          weekday: "long",
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        }).format(item.startTime)}
+      </td>
+      <td className="hidden md:table-cell">
+        {new Intl.DateTimeFormat("en-US", {
+          hour: "2-digit",
+          minute: "2-digit",
+        }).format(item.startTime)}
+      </td>
+      <td className="hidden md:table-cell">
+        {new Intl.DateTimeFormat("en-US", {
+          hour: "2-digit",
+          minute: "2-digit",
+        }).format(item.endTime)}
+      </td>
       <td>
         <div className="flex items-center gap-2">
           {role === "admin" && (
@@ -69,7 +88,58 @@ function EventRow(item: Event) {
   );
 }
 
-export default function EventsListPage() {
+export default async function EventsListPage({
+  searchParams,
+}: {
+  searchParams: { [key: string]: string | undefined };
+}) {
+  const { page, ...queryParams } = await searchParams;
+  const pageNumber = page ? parseInt(page as string) : 1;
+
+  const query: Prisma.EventWhereInput = {};
+  // URL PARAMS
+  if (queryParams) {
+    for (const [key, value] of Object.entries(queryParams)) {
+      if (value !== undefined) {
+        switch (key) {
+          case "classId":
+            {
+              query.classId = parseInt(value as string);
+            }
+            break;
+          case "search":
+            {
+              query.OR = [
+                { title: { contains: value as string, mode: "insensitive" } },
+                {
+                  class: {
+                    name: { contains: value as string, mode: "insensitive" },
+                  },
+                },
+              ];
+            }
+            break;
+          default:
+            break;
+        }
+      }
+    }
+  }
+
+  const [data, count] = await prisma.$transaction([
+    prisma.event.findMany({
+      where: query,
+      include: {
+        class: { select: { name: true } },
+      },
+      take: ITEMS_PER_PAGE,
+      skip: (pageNumber - 1) * ITEMS_PER_PAGE,
+    }),
+    prisma.event.count({
+      where: query,
+    }),
+  ]);
+
   return (
     <div className="bg-white p-4 rounded-md flex-1 m-4 mt-0">
       {/* TOP */}
@@ -89,9 +159,9 @@ export default function EventsListPage() {
         </div>
       </div>
       {/* List */}
-      <Table columns={columns} renderRow={EventRow} data={eventsData} />
+      <Table columns={columns} renderRow={EventRow} data={data} />
       {/* Pagination */}
-      <Pagination />
+      <Pagination page={pageNumber} count={count} />
     </div>
   );
 }

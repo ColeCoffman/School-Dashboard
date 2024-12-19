@@ -3,13 +3,16 @@ import Pagination from "@/app/components/Pagination";
 import Table from "@/app/components/Table";
 import TableSearch from "@/app/components/TableSearch";
 import { role, announcementsData } from "@/app/lib/data";
+import prisma from "@/app/lib/prisma";
+import { ITEMS_PER_PAGE } from "@/app/lib/settings";
+import { Prisma } from "@prisma/client";
 import Image from "next/image";
 
-type Announcement = {
+type AnnouncementList = {
   id: number;
   title: string;
-  class: string;
-  date: string;
+  class: { name: string } | null;
+  date: Date;
 };
 
 const columns = [
@@ -32,15 +35,20 @@ const columns = [
   },
 ];
 
-function AnnouncementRow(item: Announcement) {
+function AnnouncementRow(item: AnnouncementList) {
   return (
     <tr
       key={item.id}
       className="border-b border-gray-200 even:bg-slate-50 text-sm hover:bg-schoolSky"
     >
       <td className="flex items-center gap-4 p-4">{item.title}</td>
-      <td>{item.class}</td>
-      <td className="hidden md:table-cell">{item.date}</td>
+      <td>{item.class?.name}</td>
+      <td className="hidden md:table-cell">
+        {new Intl.DateTimeFormat("en-US", {
+          dateStyle: "medium",
+          timeStyle: "short",
+        }).format(item.date)}
+      </td>
       <td>
         <div className="flex items-center gap-2">
           {role === "admin" && (
@@ -55,7 +63,58 @@ function AnnouncementRow(item: Announcement) {
   );
 }
 
-export default function AnnouncementsListPage() {
+export default async function AnnouncementsListPage({
+  searchParams,
+}: {
+  searchParams: { [key: string]: string | undefined };
+}) {
+  const { page, ...queryParams } = await searchParams;
+  const pageNumber = page ? parseInt(page as string) : 1;
+
+  const query: Prisma.AnnouncementWhereInput = {};
+  // URL PARAMS
+  if (queryParams) {
+    for (const [key, value] of Object.entries(queryParams)) {
+      if (value !== undefined) {
+        switch (key) {
+          case "classId":
+            {
+              query.classId = parseInt(value as string);
+            }
+            break;
+          case "search":
+            {
+              query.OR = [
+                { title: { contains: value as string, mode: "insensitive" } },
+                {
+                  class: {
+                    name: { contains: value as string, mode: "insensitive" },
+                  },
+                },
+              ];
+            }
+            break;
+          default:
+            break;
+        }
+      }
+    }
+  }
+
+  const [data, count] = await prisma.$transaction([
+    prisma.announcement.findMany({
+      where: query,
+      include: {
+        class: { select: { name: true } },
+      },
+      take: ITEMS_PER_PAGE,
+      skip: (pageNumber - 1) * ITEMS_PER_PAGE,
+    }),
+    prisma.announcement.count({
+      where: query,
+    }),
+  ]);
+
   return (
     <div className="bg-white p-4 rounded-md flex-1 m-4 mt-0">
       {/* TOP */}
@@ -79,13 +138,9 @@ export default function AnnouncementsListPage() {
         </div>
       </div>
       {/* List */}
-      <Table
-        columns={columns}
-        renderRow={AnnouncementRow}
-        data={announcementsData}
-      />
+      <Table columns={columns} renderRow={AnnouncementRow} data={data} />
       {/* Pagination */}
-      <Pagination />
+      <Pagination page={pageNumber} count={count} />
     </div>
   );
 }

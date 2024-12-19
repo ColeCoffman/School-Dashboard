@@ -123,19 +123,34 @@ export default function SingleStudentPage() {
         <div className="bg-white rounded-md p-4">
           <h1 className="text-xl font-semibold">Shortcuts</h1>
           <div className="mt-4 flex gap-4 flex-wrap text-xs text-gray-500">
-            <Link href="/" className="p-3 rounded-md bg-schoolSkyLight">
+            <Link
+              href={`/list/lessons?classId=${2}`}
+              className="p-3 rounded-md bg-schoolSkyLight"
+            >
               Student&apos;s Lessons
             </Link>
-            <Link href="/" className="p-3 rounded-md bg-schoolPurpleLight">
+            <Link
+              href={`/list/teachers?classId=${2}`}
+              className="p-3 rounded-md bg-schoolPurpleLight"
+            >
               Students&apos;s Teachers
             </Link>
-            <Link href="/" className="p-3 rounded-md bg-schoolYellowLight">
+            <Link
+              href={`/list/results?studentId=${"student2"}`}
+              className="p-3 rounded-md bg-schoolYellowLight"
+            >
               Student &apos;s Results
             </Link>
-            <Link href="/" className="p-3 rounded-md bg-pink-50">
+            <Link
+              href={`/list/exams?classId=${2}`}
+              className="p-3 rounded-md bg-pink-50"
+            >
               Student&apos;s Exams
             </Link>
-            <Link href="/" className="p-3 rounded-md bg-schoolSkyLight">
+            <Link
+              href={`/list/assignments?classId=${2}`}
+              className="p-3 rounded-md bg-schoolSkyLight"
+            >
               Student&apos;s Assignments
             </Link>
           </div>

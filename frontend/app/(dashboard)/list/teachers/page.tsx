@@ -2,20 +2,23 @@ import FormModal from "@/app/components/FormModal";
 import Pagination from "@/app/components/Pagination";
 import Table from "@/app/components/Table";
 import TableSearch from "@/app/components/TableSearch";
-import { role, teachersData } from "@/app/lib/data";
+import { role } from "@/app/lib/data";
+import prisma from "@/app/lib/prisma";
+import { Class, Subject, Teacher, Prisma } from "@prisma/client";
 import Image from "next/image";
 import Link from "next/link";
+import { ITEMS_PER_PAGE } from "@/app/lib/settings";
 
-type Teacher = {
-  id: number;
-  teacherId: string;
+type TeacherList = {
+  id: string;
   name: string;
-  email?: string;
-  photo: string;
-  phone: string;
-  subjects: string[];
-  classes: string[];
-  address: string;
+  username: string;
+  email: string | null;
+  phone: string | null;
+  address: string | null;
+  img: string | null;
+  subjects: { name: string }[];
+  classes: { name: string }[];
 };
 
 const columns = [
@@ -54,7 +57,7 @@ const columns = [
   },
 ];
 
-function TeacherRow(item: Teacher) {
+function TeacherRow(item: TeacherList) {
   return (
     <tr
       key={item.id}
@@ -62,7 +65,7 @@ function TeacherRow(item: Teacher) {
     >
       <td className="flex items-center gap-4 p-4">
         <Image
-          src={item.photo}
+          src={item.img ?? "/noAvatar.png"}
           alt="Avatar"
           width={40}
           height={40}
@@ -73,9 +76,13 @@ function TeacherRow(item: Teacher) {
           <p className="text-xs text-gray-500">{item?.email}</p>
         </div>
       </td>
-      <td className="hidden md:table-cell">{item.teacherId}</td>
-      <td className="hidden md:table-cell">{item.subjects.join(", ")}</td>
-      <td className="hidden md:table-cell">{item.classes.join(", ")}</td>
+      <td className="hidden md:table-cell">{item.username}</td>
+      <td className="hidden md:table-cell">
+        {item.subjects.map((subject) => subject.name).join(", ")}
+      </td>
+      <td className="hidden md:table-cell">
+        {item.classes.map((classItem) => classItem.name).join(", ")}
+      </td>
       <td className="hidden lg:table-cell">{item.phone}</td>
       <td className="hidden lg:table-cell">{item.address}</td>
       <td>
@@ -94,7 +101,59 @@ function TeacherRow(item: Teacher) {
   );
 }
 
-export default function TeachersListPage() {
+export default async function TeachersListPage({
+  searchParams,
+}: {
+  searchParams: { [key: string]: string | undefined };
+}) {
+  const { page, ...queryParams } = await searchParams;
+  const pageNumber = page ? parseInt(page as string) : 1;
+
+  const query: Prisma.TeacherWhereInput = {};
+  // URL PARAMS
+  if (queryParams) {
+    for (const [key, value] of Object.entries(queryParams)) {
+      if (value !== undefined) {
+        switch (key) {
+          case "classId":
+            {
+              query.lessons = {
+                some: {
+                  id: parseInt(value as string),
+                },
+              };
+            }
+            break;
+          case "search":
+            {
+              query.name = {
+                contains: value as string,
+                mode: "insensitive",
+              };
+            }
+            break;
+          default:
+            break;
+        }
+      }
+    }
+  }
+
+  const [data, count] = await prisma.$transaction([
+    prisma.teacher.findMany({
+      where: query,
+      include: {
+        subjects: { select: { name: true } },
+        classes: { select: { name: true } },
+      },
+      take: ITEMS_PER_PAGE,
+      skip: (pageNumber - 1) * ITEMS_PER_PAGE,
+    }),
+    prisma.teacher.count({
+      where: query,
+    }),
+  ]);
+
   return (
     <div className="bg-white p-4 rounded-md flex-1 m-4 mt-0">
       {/* TOP */}
@@ -114,9 +173,9 @@ export default function TeachersListPage() {
         </div>
       </div>
       {/* List */}
-      <Table columns={columns} renderRow={TeacherRow} data={teachersData} />
+      <Table columns={columns} renderRow={TeacherRow} data={data} />
       {/* Pagination */}
-      <Pagination />
+      <Pagination page={pageNumber} count={count} />
     </div>
   );
 }

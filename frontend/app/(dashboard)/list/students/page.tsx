@@ -5,17 +5,19 @@ import TableSearch from "@/app/components/TableSearch";
 import { role, studentsData } from "@/app/lib/data";
 import Image from "next/image";
 import Link from "next/link";
+import { Class, Grade, Prisma, Student } from "@prisma/client";
+import prisma from "@/app/lib/prisma";
+import { ITEMS_PER_PAGE } from "@/app/lib/settings";
 
-type Student = {
-  id: number;
-  studentId: string;
+type StudentList = {
+  id: string;
   name: string;
-  email?: string;
-  photo: string;
-  phone?: string;
-  grade: number;
-  class: string;
-  address: string;
+  username: string;
+  phone: string | null;
+  address: string | null;
+  img: string | null;
+  class: { name: string };
+  grade: { level: number };
 };
 
 const columns = [
@@ -49,7 +51,7 @@ const columns = [
   },
 ];
 
-function StudentRow(item: Student) {
+function StudentRow(item: StudentList) {
   return (
     <tr
       key={item.id}
@@ -57,7 +59,7 @@ function StudentRow(item: Student) {
     >
       <td className="flex items-center gap-4 p-4">
         <Image
-          src={item.photo}
+          src={item.img || "/noAvatar.png"}
           alt="Avatar"
           width={40}
           height={40}
@@ -65,11 +67,11 @@ function StudentRow(item: Student) {
         />
         <div className="flex flex-col">
           <h3 className="font-semibold">{item.name}</h3>
-          <p className="text-xs text-gray-500">{item.class}</p>
+          <p className="text-xs text-gray-500">{item.class.name}</p>
         </div>
       </td>
-      <td className="hidden md:table-cell">{item.studentId}</td>
-      <td className="hidden md:table-cell">{item.grade}</td>
+      <td className="hidden md:table-cell">{item.username}</td>
+      <td className="hidden md:table-cell">{item.grade.level}</td>
       <td className="hidden md:table-cell">{item.phone}</td>
       <td className="hidden lg:table-cell">{item.address}</td>
       <td>
@@ -88,7 +90,62 @@ function StudentRow(item: Student) {
   );
 }
 
-export default function StudentsListPage() {
+export default async function StudentsListPage({
+  searchParams,
+}: {
+  searchParams: { [key: string]: string | undefined };
+}) {
+  const { page, ...queryParams } = await searchParams;
+  const pageNumber = page ? parseInt(page as string) : 1;
+
+  const query: Prisma.StudentWhereInput = {};
+
+  // URL PARAMS
+  if (queryParams) {
+    for (const [key, value] of Object.entries(queryParams)) {
+      if (value !== undefined) {
+        switch (key) {
+          case "teacherId":
+            {
+              query.class = {
+                lessons: {
+                  some: {
+                    teacherId: value as string,
+                  },
+                },
+              };
+            }
+            break;
+          case "search":
+            {
+              query.name = {
+                contains: value as string,
+                mode: "insensitive",
+              };
+            }
+            break;
+          default:
+            break;
+        }
+      }
+    }
+  }
+
+  const [data, count] = await prisma.$transaction([
+    prisma.student.findMany({
+      where: query,
+      include: {
+        class: true,
+        grade: true,
+      },
+      take: ITEMS_PER_PAGE,
+      skip: (pageNumber - 1) * ITEMS_PER_PAGE,
+    }),
+    prisma.student.count({
+      where: query,
+    }),
+  ]);
+
   return (
     <div className="bg-white p-4 rounded-md flex-1 m-4 mt-0">
       {/* TOP */}
@@ -108,9 +165,9 @@ export default function StudentsListPage() {
         </div>
       </div>
       {/* List */}
-      <Table columns={columns} renderRow={StudentRow} data={studentsData} />
+      <Table columns={columns} renderRow={StudentRow} data={data} />
       {/* Pagination */}
-      <Pagination />
+      <Pagination page={pageNumber} count={count} />
     </div>
   );
 }

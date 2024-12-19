@@ -147,19 +147,34 @@ export default function SingleTeacherPage() {
         <div className="bg-white rounded-md p-4">
           <h1 className="text-xl font-semibold">Shortcuts</h1>
           <div className="mt-4 flex gap-4 flex-wrap text-xs text-gray-500">
-            <Link href="/" className="p-3 rounded-md bg-schoolSkyLight">
+            <Link
+              href={`/list/classes?supervisorId=${"teacher3"}`}
+              className="p-3 rounded-md bg-schoolSkyLight"
+            >
               Teacher&apos;s Classes
             </Link>
-            <Link href="/" className="p-3 rounded-md bg-schoolPurpleLight">
+            <Link
+              href={`/list/students?teacherId=${"teacher3"}`}
+              className="p-3 rounded-md bg-schoolPurpleLight"
+            >
               Teacher&apos;s Students
             </Link>
-            <Link href="/" className="p-3 rounded-md bg-schoolYellowLight">
+            <Link
+              href={`/list/lessons?teacherId=${"teacher3"}`}
+              className="p-3 rounded-md bg-schoolYellowLight"
+            >
               Teacher&apos;s Lessons
             </Link>
-            <Link href="/" className="p-3 rounded-md bg-pink-50">
+            <Link
+              href={`/list/exams?teacherId=${"teacher3"}`}
+              className="p-3 rounded-md bg-pink-50"
+            >
               Teacher&apos;s Exams
             </Link>
-            <Link href="/" className="p-3 rounded-md bg-schoolSkyLight">
+            <Link
+              href={`/list/assignments?teacherId=${"teacher3"}`}
+              className="p-3 rounded-md bg-schoolSkyLight"
+            >
               Teacher&apos;s Assignments
             </Link>
           </div>
