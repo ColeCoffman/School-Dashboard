@@ -38,3 +38,47 @@ services:
       - frontend
       - db
       - adminer
+
+  prometheus:
+    image: prom/prometheus
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - 9090:9090
+    depends_on:
+      - db
+
+  grafana:
+    image: grafana/grafana
+    ports:
+      - 3000:3000
+    depends_on:
+      - prometheus
+
+  postgres-exporter:
+    image: wrouesnel/postgres_exporter
+    environment:
+      DATA_SOURCE_NAME: "postgresql://postgres:PASS123@db:5432/school_app?sslmode=disable"
+    ports:
+      - 9187:9187
+    depends_on:
+      - db
+
+  node-exporter:
+    image: prom/node-exporter
+    ports:
+      - 9101:9100
+    depends_on:
+      - db
+      - prometheus
+
+  docker:
+    image: gcr.io/cadvisor/cadvisor
+    ports:
+      - 8080:8080
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+    depends_on:
+      - prometheus
