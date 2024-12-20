@@ -2,11 +2,13 @@ import FormModal from "@/app/components/FormModal";
 import Pagination from "@/app/components/Pagination";
 import Table from "@/app/components/Table";
 import TableSearch from "@/app/components/TableSearch";
-import { role, announcementsData } from "@/app/lib/data";
 import prisma from "@/app/lib/prisma";
 import { ITEMS_PER_PAGE } from "@/app/lib/settings";
+import { role } from "@/app/lib/utils";
+import { auth } from "@clerk/nextjs/server";
 import { Prisma } from "@prisma/client";
 import Image from "next/image";
+import { JSX } from "react";
 
 type AnnouncementList = {
   id: number;
@@ -15,53 +17,31 @@ type AnnouncementList = {
   date: Date;
 };
 
-const columns = [
-  {
-    header: "Title",
-    accessor: "title",
-  },
-  {
-    header: "Class",
-    accessor: "class",
-  },
-  {
-    header: "Date",
-    accessor: "date",
-    className: "hidden md:table-cell",
-  },
-  {
-    header: "Actions",
-    accessor: "actions",
-  },
-];
-
-function AnnouncementRow(item: AnnouncementList) {
-  return (
-    <tr
-      key={item.id}
-      className="border-b border-gray-200 even:bg-slate-50 text-sm hover:bg-schoolSky"
-    >
-      <td className="flex items-center gap-4 p-4">{item.title}</td>
-      <td>{item.class?.name}</td>
-      <td className="hidden md:table-cell">
-        {new Intl.DateTimeFormat("en-US", {
-          dateStyle: "medium",
-          timeStyle: "short",
-        }).format(item.date)}
-      </td>
-      <td>
-        <div className="flex items-center gap-2">
-          {role === "admin" && (
-            <>
-              <FormModal table="announcement" type="update" data={item} />
-              <FormModal table="announcement" type="delete" id={item.id} />
-            </>
-          )}
-        </div>
-      </td>
-    </tr>
-  );
-}
+const AnnouncementRow = (item: AnnouncementList, role: string): JSX.Element => (
+  <tr
+    key={item.id}
+    className="border-b border-gray-200 even:bg-slate-50 text-sm hover:bg-schoolSky"
+  >
+    <td className="flex items-center gap-4 p-4">{item.title}</td>
+    <td>{item.class?.name}</td>
+    <td className="hidden md:table-cell">
+      {new Intl.DateTimeFormat("en-US", {
+        dateStyle: "medium",
+        timeStyle: "short",
+      }).format(item.date)}
+    </td>
+    <td>
+      <div className="flex items-center gap-2">
+        {role === "admin" && (
+          <>
+            <FormModal table="announcement" type="update" data={item} />
+            <FormModal table="announcement" type="delete" id={item.id} />
+          </>
+        )}
+      </div>
+    </td>
+  </tr>
+);
 
 export default async function AnnouncementsListPage({
   searchParams,
@@ -70,6 +50,23 @@ export default async function AnnouncementsListPage({
 }) {
   const { page, ...queryParams } = await searchParams;
   const pageNumber = page ? parseInt(page as string) : 1;
+
+  const columns = [
+    {
+      header: "Title",
+      accessor: "title",
+    },
+    {
+      header: "Class",
+      accessor: "class",
+    },
+    {
+      header: "Date",
+      accessor: "date",
+      className: "hidden md:table-cell",
+    },
+    ...(role === "admin" ? [{ header: "Actions", accessor: "actions" }] : []),
+  ];
 
   const query: Prisma.AnnouncementWhereInput = {};
   // URL PARAMS
@@ -138,7 +135,11 @@ export default async function AnnouncementsListPage({
         </div>
       </div>
       {/* List */}
-      <Table columns={columns} renderRow={AnnouncementRow} data={data} />
+      <Table
+        columns={columns}
+        renderRow={(item) => AnnouncementRow(item, role ?? "guest")}
+        data={data}
+      />
       {/* Pagination */}
       <Pagination page={pageNumber} count={count} />
     </div>

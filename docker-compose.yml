@@ -54,13 +54,13 @@ services:
       - 3000:3000
     depends_on:
       - prometheus
+    logging:
+      driver: "none"
 
   postgres-exporter:
-    image: wrouesnel/postgres_exporter
+    image: quay.io/prometheuscommunity/postgres-exporter
     environment:
       DATA_SOURCE_NAME: "postgresql://postgres:PASS123@db:5432/school_app?sslmode=disable"
-    ports:
-      - 9187:9187
     depends_on:
       - db
 
