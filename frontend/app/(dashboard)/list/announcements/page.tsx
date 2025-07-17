@@ -4,7 +4,7 @@ import Table from "@/app/components/Table";
 import TableSearch from "@/app/components/TableSearch";
 import prisma from "@/app/lib/prisma";
 import { ITEMS_PER_PAGE } from "@/app/lib/settings";
-import { role } from "@/app/lib/utils";
+import { getRole } from "@/app/lib/utils";
 import { Prisma } from "@prisma/client";
 import Image from "next/image";
 import { JSX } from "react";
@@ -49,6 +49,7 @@ export default async function AnnouncementsListPage({
 }) {
   const { page, ...queryParams } = await searchParams;
   const pageNumber = page ? parseInt(page as string) : 1;
+  const role = await getRole();
 
   const columns = [
     {
