@@ -93,7 +93,7 @@ function ResultRow(item: ResultList) {
 export default async function ResultsListPage({
   searchParams,
 }: {
-  searchParams: { [key: string]: string | undefined };
+  searchParams: Promise<{ [key: string]: string | undefined }>;
 }) {
   const { page, ...queryParams } = await searchParams;
   const pageNumber = page ? parseInt(page as string) : 1;

@@ -4,10 +4,10 @@ import Table from "@/app/components/Table";
 import TableSearch from "@/app/components/TableSearch";
 import { role } from "@/app/lib/data";
 import prisma from "@/app/lib/prisma";
-import { Class, Subject, Teacher, Prisma } from "@prisma/client";
+import { ITEMS_PER_PAGE } from "@/app/lib/settings";
+import { Prisma } from "@prisma/client";
 import Image from "next/image";
 import Link from "next/link";
-import { ITEMS_PER_PAGE } from "@/app/lib/settings";
 
 type TeacherList = {
   id: string;
@@ -104,7 +104,7 @@ function TeacherRow(item: TeacherList) {
 export default async function TeachersListPage({
   searchParams,
 }: {
-  searchParams: { [key: string]: string | undefined };
+  searchParams: Promise<{ [key: string]: string | undefined }>;
 }) {
   const { page, ...queryParams } = await searchParams;
   const pageNumber = page ? parseInt(page as string) : 1;
