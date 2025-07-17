@@ -5,7 +5,6 @@ import TableSearch from "@/app/components/TableSearch";
 import prisma from "@/app/lib/prisma";
 import { ITEMS_PER_PAGE } from "@/app/lib/settings";
 import { role } from "@/app/lib/utils";
-import { auth } from "@clerk/nextjs/server";
 import { Prisma } from "@prisma/client";
 import Image from "next/image";
 import { JSX } from "react";
@@ -46,7 +45,7 @@ const AnnouncementRow = (item: AnnouncementList, role: string): JSX.Element => (
 export default async function AnnouncementsListPage({
   searchParams,
 }: {
-  searchParams: { [key: string]: string | undefined };
+  searchParams: Promise<{ [key: string]: string | undefined }>;
 }) {
   const { page, ...queryParams } = await searchParams;
   const pageNumber = page ? parseInt(page as string) : 1;
