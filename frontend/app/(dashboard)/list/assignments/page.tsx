@@ -2,10 +2,10 @@ import FormModal from "@/app/components/FormModal";
 import Pagination from "@/app/components/Pagination";
 import Table from "@/app/components/Table";
 import TableSearch from "@/app/components/TableSearch";
-import { role, assignmentsData } from "@/app/lib/data";
+import { role } from "@/app/lib/data";
 import prisma from "@/app/lib/prisma";
 import { ITEMS_PER_PAGE } from "@/app/lib/settings";
-import { Assignment, Prisma } from "@prisma/client";
+import { Prisma } from "@prisma/client";
 import Image from "next/image";
 
 type AssignmentList = {
@@ -81,7 +81,7 @@ function AssignmentRow(item: AssignmentList) {
 export default async function AssignmentsListPage({
   searchParams,
 }: {
-  searchParams: { [key: string]: string | undefined };
+  searchParams: Promise<{ [key: string]: string | undefined }>;
 }) {
   const { page, ...queryParams } = await searchParams;
   const pageNumber = page ? parseInt(page as string) : 1;
