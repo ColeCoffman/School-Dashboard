@@ -64,7 +64,11 @@ export default function FormModal({
         </button>
       </form>
     ) : type === "update" || type === "create" ? (
-      forms[table](type, data)
+      forms[table] ? (
+        forms[table](type, data)
+      ) : (
+        "Form not found"
+      )
     ) : (
       "Form not found"
     );
